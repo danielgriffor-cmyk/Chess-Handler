@@ -18,7 +18,7 @@ class Bot:
     def main_eval(self, board):
         score = self.evaluate(board)
         if board.turn != self.color:
-            return -score
+            return score
         return score
 
     def all_moves(self, board):
@@ -114,7 +114,7 @@ class Bot:
 
             if score >= beta:
                 return beta
-            if score > alpha:
+            if score < alpha:
                 alpha = score
 
         return alpha
