@@ -4,22 +4,17 @@ import random
 import math
 
 class Bot:
-    def __init__(self, color=chess.BLACK, depth=2):
+    def __init__(self, color=chess.BLACK, depth=2, qsearch=True):
         self.color = color
         self.depth = depth
+        self.qsearch = qsearch
 
     def evaluate(self, board):
-        """
-        Override this method in subclasses.
-        Should return a numeric evaluation from the perspective of self.color
-        """
         raise NotImplementedError
 
     def main_eval(self, board):
         score = self.evaluate(board)
-        if board.turn != self.color:
-            return score
-        return score
+        return score + random.random() / 1000
 
     def all_moves(self, board):
         moves = []
@@ -44,7 +39,10 @@ class Bot:
 
         # Terminal node
         if depth == 0:
-            return self.quiescence(board, alpha, beta), None
+            if self.qsearch:
+                return self.quiescence(board, alpha, beta), None
+            else:
+                return self.main_eval(board), None
 
         if board.is_game_over():
             return self.main_eval(board), None
@@ -54,9 +52,6 @@ class Bot:
 
         if not moves:
             return self.main_eval(board), None
-
-        # -------- MOVE ORDERING --------
-        # Captures first → massive pruning improvement
         moves.sort(
             key=lambda m: board.is_capture(m[0]),
             reverse=maximizing
@@ -96,16 +91,21 @@ class Bot:
 
             return value, best_move
 
+    def eval_for_search(self, board):
+        # Return evaluation from side-to-move perspective (negamax-style)
+        base = self.evaluate(board)          # base = positive = good for self.color
+        return base if board.turn == self.color else -base
+
     def quiescence(self, board, alpha, beta):
-        stand_pat = self.main_eval(board)
+        stand_pat = self.eval_for_search(board)
 
         if stand_pat >= beta:
             return beta
-        if alpha < stand_pat:
+        if stand_pat > alpha:
             alpha = stand_pat
 
         for move in board.legal_moves:
-            if not board.is_capture(move) and not board.gives_check(move):
+            if not (board.is_capture(move) or board.gives_check(move)):
                 continue
 
             board.push(move)
@@ -114,7 +114,7 @@ class Bot:
 
             if score >= beta:
                 return beta
-            if score < alpha:
+            if score > alpha:
                 alpha = score
 
         return alpha
