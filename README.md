@@ -35,6 +35,7 @@ To write evaluation logic, overwrite the `evaluate` function.
 for example,
 ```python
 from base.ChessBoardBase import Bot
+import chess
 
 class Bot(Bot):
   def evaluate(self, board):
@@ -53,6 +54,7 @@ A name is really easy to add to your bot. Using the stalemate bot as an example:
 
 ```python
 from base.ChessBoardBase import Bot
+import chess
 
 class Bot(Bot):
   def name(self):
