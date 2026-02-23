@@ -116,7 +116,7 @@ class Bot:
             return stand_pat
 
         for move in board.legal_moves:
-            if not board.is_capture(move):
+            if not board.is_capture(move) and not board.gives_check(move):
                 continue
 
             board.push(move)
