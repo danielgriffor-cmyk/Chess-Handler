@@ -5,10 +5,11 @@ import random
 import math
 
 class Bot:
-    def __init__(self, color=chess.BLACK, depth=2, qsearch=True):
+    def __init__(self, color=chess.BLACK, depth=2, qsearch=True, qdepth=4):
         self.color = color
         self.depth = depth
         self.qsearch = qsearch
+        self.qdepth = qdepth
         self.transposition_table = {}
         self.past_moves_hash = {}
 
@@ -45,7 +46,7 @@ class Bot:
         # Terminal node
         if depth == 0:
             if self.qsearch:
-                return self.quiescence(board, alpha, beta), None
+                return self.quiescence(board, alpha, beta, self.qdepth), None
             else:
                 return self.main_eval(board), None
 
@@ -100,24 +101,30 @@ class Bot:
         base = self.evaluate(board)
         return base if board.turn == self.color else -base
 
-    def quiescence(self, board, alpha, beta):
+    def quiescence(self, board, alpha, beta, depth):
         stand_pat = self.perspective_search(board)
 
         if stand_pat >= beta:
-            return beta
+            return stand_pat
         if stand_pat > alpha:
             alpha = stand_pat
 
+        if depth == 0:
+            return stand_pat
+
+        if board.is_repetition(2):
+            return stand_pat
+
         for move in board.legal_moves:
-            if not (board.is_capture(move) or board.gives_check(move)):
+            if not board.is_capture(move):
                 continue
 
             board.push(move)
-            score = -self.quiescence(board, -beta, -alpha)
+            score = -self.quiescence(board, -beta, -alpha, depth - 1)
             board.pop()
 
             if score >= beta:
-                return beta
+                return score
             if score > alpha:
                 alpha = score
 
