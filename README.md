@@ -21,7 +21,7 @@ Just remember to set the color of the bot to its color when it does evaluation, 
 
 To make a chess bot, you must create your own class. This class should extend the base chess bot, formatted as
 ```python
-from ChessBoardBase import Bot
+from ChessBotBase import Bot
 
 class MyChessBot(Bot):
   ...
@@ -40,4 +40,6 @@ class StalemateChessBot(Bot):
       return 100
     return 0
 ```
-always plays for stalemate if it can see it, or else it plays randomly. Chess bots already have built in noise, so making a bot return a static value for every position will make the bot play a random move. Chess bots also automatically play mate in one, but do not look for mate in more than one.
+always plays for stalemate if it can see it, or else it plays the first legal move. 
+
+Chess bots also automatically play mate in one, but do not look for mate in more than one.
