@@ -4,8 +4,11 @@ import ChessBotBase
 import math
 
 class Bot(ChessBotBase.Bot):
+    def name(self):
+        return "Complex Chess Bot"
+
     def evaluate(self, board):
-        
+
         if board.is_checkmate():
             return -math.inf if board.turn == self.color else math.inf
         

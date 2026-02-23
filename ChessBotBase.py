@@ -12,6 +12,9 @@ class Bot:
         self.transposition_table = {}
         self.past_moves_hash = {}
 
+    def name(self):
+        return f"Chess Bot (depth {self.depth})"
+
     def evaluate(self, board):
         raise NotImplementedError
 
