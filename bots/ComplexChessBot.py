@@ -15,9 +15,9 @@ class Bot(ChessBotBase.Bot):
         score = 0
         pawn_val, knight_val, bishop_val, rook_val, queen_val = 10, 30, 35, 55, 100
         
-        defend_mod = 0.05
-        attacked_mod = 0.05
-        attack_mod = 0.03
+        defend_mod = 0.015
+        attacked_mod = 0.015
+        attack_mod = 0.01
 
         distance_from_center_mod = 0.2
         opp_king_dist_mod = 1
@@ -128,8 +128,6 @@ class Bot(ChessBotBase.Bot):
             dist += chess.square_distance(pos, 45)
             distance_score += dist * distance_from_center_mod * beginning_bonus * middlegame_bonus
 
-        distance_score = 40 - distance_score
-
         # ------------------ KING WALKING -------------------
 
         king_walk_score = 0
@@ -180,9 +178,9 @@ class Bot(ChessBotBase.Bot):
 
         score = (material_score + defended_score - attacked_score + attacker_score)
         
-        score += (total_pieces * (middlegame_bonus - 1)) + distance_score
+        score += (total_pieces * (middlegame_bonus - 1)) - distance_score
 
-        score += opp_king_score - king_dists_score + coverage_score
+        score += opp_king_score - king_dists_score + coverage_score + pawn_distance_score
 
         if board.is_stalemate() or board.is_insufficient_material():
             return -score / 8

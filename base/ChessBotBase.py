@@ -6,13 +6,14 @@ import math
 
 class Bot:
     def __init__(self, color=chess.BLACK, depth=2, qsearch=True, qdepth=4):
-        self.color = color if depth%2 == 0 else not color
+        self.color = color
         self.depth = depth
         self.qsearch = qsearch
         self.qdepth = qdepth
         self.turn = 0
         self.transposition_table = {}
         self.past_moves_hash = {}
+        self.resigns = False
 
     def name(self):
         return f"Chess Bot (depth {self.depth})"
@@ -31,7 +32,6 @@ class Bot:
 
     def all_moves(self, board):
         moves = []
-        my_color = board.turn
 
         for move in board.legal_moves:
             moves.append((move, False))
@@ -47,7 +47,10 @@ class Bot:
         # Terminal node
         if depth == 0:
             if self.qsearch:
-                return self.quiescence(board, alpha, beta, self.qdepth), None
+                if maximizing:
+                    return self.quiescence(board, self.qdepth), None
+                else:
+                    return -self.quiescence(board, self.qdepth), None
             else:
                 return self.main_eval(board), None
 
@@ -98,39 +101,28 @@ class Bot:
 
             return value, best_move
 
-    def perspective_search(self, board):
+    def perspective_eval(self, board):
         base = self.evaluate(board)
         return base if board.turn == self.color else -base
 
-    def quiescence(self, board, alpha, beta, depth):
-        stand_pat = self.perspective_search(board)
-
-        if stand_pat >= beta:
-            return beta
-        if stand_pat > alpha:
-            alpha = stand_pat
-
-        if depth == 0:
+    def quiescence(self, board, depth):
+        stand_pat = self.main_eval(board)
+        
+        if depth == 0 or board.is_repetition(2):
             return stand_pat
-
-        if board.is_repetition(2):
-            return stand_pat
-
+        
+        best_score = stand_pat
+        
         for move in board.legal_moves:
             if not board.is_capture(move) and not board.gives_check(move):
                 continue
-
             board.push(move)
-            score = -self.quiescence(board, -beta, -alpha, depth - 1)
+            score = -self.quiescence(board, depth - 1)
             board.pop()
-
-            if score >= beta:
-                return beta
-            if score > alpha:
-                alpha = score
-
-        return alpha
-
+            best_score = max(best_score, score)
+        
+        return best_score
+        
     def choose_move(self, board, depth=None):
         self.turn += 1
 
@@ -163,3 +155,7 @@ class Bot:
         self.past_moves_hash[h] = best
         return best
 
+    def reset(self):
+        self.transposition_table.clear()
+        self.past_moves_hash.clear()
+        self.turn = 0

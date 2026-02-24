@@ -40,11 +40,41 @@ class chessGUI:
         self.status = tk.Label(self.root, text="", font=("Arial", 14))
         self.status.pack()
 
+        self.eval_frame = tk.Frame(self.root)
+        self.eval_frame.pack()
+
+        self.white_eval = tk.Label(
+            self.eval_frame,
+            text="White: 0.0",
+            font=("Arial", 12),
+            fg="white",
+            bg="black",
+            padx=10,
+            pady=5
+        )
+        self.white_eval.pack(side=tk.LEFT, padx=5)
+
+        self.black_eval = tk.Label(
+            self.eval_frame,
+            text="Black: 0.0",
+            font=("Arial", 12),
+            fg="white",
+            bg="black",
+            padx=10,
+            pady=5
+        )
+        self.black_eval.pack(side=tk.LEFT, padx=5)
+
         self.canvas.bind("<Button-1>", self.on_click)
         self.draw()
 
         # Start bot move immediately if it's bot vs bot and Black is first
         self.root.after(self.move_time, self.bot_turn)
+
+    def update_evaluation(self, white_eval, black_eval):
+        """Update the evaluation display for both sides"""
+        self.white_eval.config(text=f"White: {white_eval:+.1f}")
+        self.black_eval.config(text=f"Black: {black_eval:+.1f}")
 
     def load_images(self):
         piece_map = {
@@ -101,6 +131,7 @@ class chessGUI:
         self.move_ring = ImageTk.PhotoImage(ring)
         
     def draw(self):
+        self.update_evaluation(self.white_player.evaluate(self.board), self.black_player.evaluate(self.board))
         self.canvas.delete("all")
         p = 0
         for r in range(8):
@@ -175,7 +206,6 @@ class chessGUI:
     def set_board(self, fen):
         self.board.set_fen(fen)
         
-
     def update_status(self):
         if self.board.is_checkmate():
             winner = "Black" if self.board.turn == chess.WHITE else "White"
@@ -247,6 +277,7 @@ class chessGUI:
             self.root.after(self.move_time, self.bot_turn)
 
     def after_player_move(self):
+        self.update_evaluation(self.white_player.evaluate(self.board), self.black_player.evaluate(self.board))
         if self.update_status():
             return
         self.root.after(self.move_time, self.bot_turn)
