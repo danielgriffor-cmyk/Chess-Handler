@@ -23,7 +23,7 @@ class Bot:
         raise NotImplementedError
 
     def openning(self, board):
-        raise NotImplementedError
+        return None
 
     def main_eval(self, board):
         h = chess.polyglot.zobrist_hash(board)
