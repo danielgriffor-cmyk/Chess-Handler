@@ -10,7 +10,7 @@ import bots.escanor as Escanor
 import bots.shallowTeal as ShallowTeal
 import bots.kamikazeGambiterBot as KamikazeGambiterBot
 
-Human = "human"
+PLAYER = "human"
 
 white_bot = ComplexChessBot.Bot(color = chess.WHITE, depth=3)
 black_bot = ShallowTeal.Bot(color = chess.BLACK, depth=3)

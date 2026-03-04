@@ -5,6 +5,10 @@ import chess
 import chess.pgn
 import math
 import threading
+import base.ChessBotBase
+
+chess_bot = base.ChessBotBase.Bot
+human = str
 
 SQUARE_SIZE = 70
 LIGHT = "#f0d9b5"
@@ -14,7 +18,7 @@ PREV_DARK = "#B49B0A"
 HIGHLIGHT = "#ec3838"
 
 class chessGUI:
-    def __init__(self, white_player='human', black_player=None):
+    def __init__(self, white_player: chess_bot | human, black_player: chess_bot | human):
         self.move_time = 100
         self.board = chess.Board()
         self.white_player = white_player
@@ -88,7 +92,18 @@ class chessGUI:
 
     def update_evaluation(self, white_eval, black_eval):
         """Update the evaluation display for both sides"""
-        self.white_eval.config(text=f"White: {white_eval:+.1f}")
+        try: w_name = self.white_player.name() 
+        except: w_name = None
+        try: b_name = self.black_player.name()
+        except: w_name = None
+        if w_name != None:
+            self.white_eval.config(text=f"White ({w_name}): {white_eval:+.1f}")
+        else:
+            self.white_eval.config(text=f"Player")
+        if b_name != None:
+            self.black_eval.config(text=f"Black ({b_name}): {black_eval:+.1f}")
+        else:
+            self.black_eval.config(text=f"Player")
         self.black_eval.config(text=f"Black: {black_eval:+.1f}")
 
     def ask_promotion(self):
