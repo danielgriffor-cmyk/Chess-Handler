@@ -6,7 +6,7 @@ import random
 import base.ChessBotBase as BaseBot   # adjust filename/import if needed
 
 
-class Bot(BaseBot):
+class Bot(BaseBot.Bot):
     """
     Your specialized bot that uses the base search logic but with your
     original evaluation function (sped up + slightly tuned).

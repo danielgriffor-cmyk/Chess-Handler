@@ -1,13 +1,13 @@
 import math
 import random
 import chess
-from ChessBotBase import Bot
+from base.ChessBotBase import Bot
 
 pawn_val, knight_val, bishop_val, rook_val, queen_val = 10, 30, 35, 55, 100 # starts at 421
 
 class Bot(Bot):
     def name(self):
-        return "| \n        V #3a2e80"
+        return "Shallow Teal"
     
     def getPieceValue(self, piece):
 
@@ -108,5 +108,4 @@ class Bot(Bot):
         elif board.is_repetition(3):
             return math.inf if score < stalemate_threshold else -math.inf
             
-        print(score)
         return score

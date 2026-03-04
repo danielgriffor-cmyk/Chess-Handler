@@ -169,10 +169,6 @@ class Bot(Bot):
 
         cycle = (self.turn // 12) % 2
         pride_mode = (cycle == 0)
-        if pride_mode:
-            print("All i feel is pity")
-        else:
-            print("I am pretty good at games")
 
         score = 0
 
