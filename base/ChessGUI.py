@@ -285,12 +285,10 @@ class chessGUI:
         if self.board.is_checkmate():
             winner = "Black" if self.board.turn == chess.WHITE else "White"
             self.status.config(text=f"Checkmate! {winner} wins.")
-            self.enable_postgame_buttons()
             return True
 
         if self.board.is_stalemate():
             self.status.config(text="Stalemate! Draw.")
-            self.enable_postgame_buttons()
             return True
 
         if self.board.is_check():
