@@ -95,7 +95,7 @@ class chessGUI:
         try: w_name = self.white_player.name() 
         except: w_name = None
         try: b_name = self.black_player.name()
-        except: w_name = None
+        except: b_name = None
         if w_name != None:
             self.white_eval.config(text=f"White ({w_name}): {white_eval:+.1f}")
         else:
@@ -104,7 +104,6 @@ class chessGUI:
             self.black_eval.config(text=f"Black ({b_name}): {black_eval:+.1f}")
         else:
             self.black_eval.config(text=f"Player")
-        self.black_eval.config(text=f"Black: {black_eval:+.1f}")
 
     def ask_promotion(self):
         """Ask user for pawn promotion piece"""

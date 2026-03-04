@@ -22,7 +22,7 @@ gui.move_time = 100
 gui.run()
 
 pgn = chess.pgn.Game.from_board(gui.board)
-pgn.headers["White"] = "Human" if white_bot == Human else white_bot.name()
-pgn.headers["Black"] = "Human" if black_bot == Human else black_bot.name()
+pgn.headers["White"] = "Player" if white_bot == "human" else white_bot.name()
+pgn.headers["Black"] = "Player" if black_bot == "human" else black_bot.name()
 
 print(pgn)
