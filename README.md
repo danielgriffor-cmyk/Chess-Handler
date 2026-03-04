@@ -36,7 +36,7 @@ To write evaluation logic, overwrite the `evaluate` function.
 
 for example,
 ```python
-from base.ChessBoardBase import Bot
+from base.ChessBotBase import Bot
 import chess
 
 class Bot(Bot):
@@ -55,7 +55,7 @@ Another thing that you need to add to your chess bot, is a name.
 A name is really easy to add to your bot. Using the stalemate bot as an example:
 
 ```python
-from base.ChessBoardBase import Bot
+from base.ChessBotBase import Bot
 import chess
 
 class Bot(Bot):
@@ -67,3 +67,5 @@ class Bot(Bot):
       return 100
     return 0
 ```
+
+The evaluation function is based off of the bots color, which is stored as a `chess.Color` type in the variable `self.color`.
