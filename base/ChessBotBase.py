@@ -6,15 +6,18 @@ import math
 from concurrent.futures import ThreadPoolExecutor
 
 class Bot:
+    turn = 0
+    transposition_table = {}
+    past_moves_hash = {}
+    is_enpassant = False
+    is_castle = False
+    is_promote = False
+
     def __init__(self, color=chess.BLACK, depth=2, qsearch=False, qdepth=4):
         self.color = color
         self.depth = depth
         self.qsearch = qsearch
         self.qdepth = qdepth
-        self.turn = 0
-        self.transposition_table = {}
-        self.past_moves_hash = {}
-        self.resigns = False
 
     def name(self):
         return f"Chess Bot (depth {self.depth})"
@@ -38,7 +41,7 @@ class Bot:
         moves = []
 
         for move in board.legal_moves:
-            moves.append((move, False))
+            moves.append(move)
 
         return moves
 
@@ -52,35 +55,35 @@ class Bot:
         if depth == 0:
             if self.qsearch:
                 if maximizing:
-                    return self.quiescence(board, self.qdepth), None
+                    return self.quiescence(board, self.qdepth)
                 else:
-                    return -self.quiescence(board, self.qdepth), None
+                    return -self.quiescence(board, self.qdepth)
             else:
-                return self.main_eval(board), None
+                return self.main_eval(board)
 
         if board.is_game_over():
-            return self.main_eval(board), None
+            return self.main_eval(board)
 
         best_move = None
         moves = self.all_moves(board)
 
         if not moves:
-            return self.main_eval(board), None
+            return self.main_eval(board)
         moves.sort(
-            key=lambda m: board.is_capture(m[0]),
+            key=lambda m: board.is_capture(m),
             reverse=maximizing
         )
 
         if maximizing:
             value = -1e9
-            for move, is_nudge in moves:
+            for move in moves:
                 board.push(move)
-                score, _ = self.minimax(board, depth - 1, alpha, beta, False)
+                score = self.minimax(board, depth - 1, alpha, beta, False)
                 board.pop()
 
                 if score > value:
                     value = score
-                    best_move = (move, is_nudge)
+                    best_move = move
 
                 alpha = max(alpha, value)
                 if alpha >= beta:
@@ -90,14 +93,14 @@ class Bot:
 
         else:
             value = 1e9
-            for move, is_nudge in moves:
+            for move in moves:
                 board.push(move)
                 score, _ = self.minimax(board, depth - 1, alpha, beta, True)
                 board.pop()
 
                 if score < value:
                     value = score
-                    best_move = (move, is_nudge)
+                    best_move = move
 
                 beta = min(beta, value)
                 if beta <= alpha:
@@ -134,7 +137,7 @@ class Bot:
 
         if move != None:
             if move in board.legal_moves:
-                return move, False
+                return move
 
         self.turn += 1
 
@@ -148,7 +151,7 @@ class Bot:
             board.push(move)
             if board.is_checkmate():
                 board.pop()
-                return move, False
+                return move
             board.pop()
 
         # --- normal minimax ---
@@ -165,12 +168,11 @@ class Bot:
             best_score = -1e9 if maximizing else 1e9
             best_move = None
 
-            def eval_move(move_tuple):
-                move, is_nudge = move_tuple
+            def eval_move(move):
                 board_copy = board.copy()
                 board_copy.push(move)
                 score, _ = self.minimax(board_copy, depth - 1, -1e9, 1e9, not maximizing)
-                return score, move_tuple
+                return score, move
 
             with ThreadPoolExecutor() as executor:
                 for score, move_tuple in executor.map(eval_move, moves):
@@ -181,8 +183,8 @@ class Bot:
             if best_move is None:
                 legal_moves = list(board.legal_moves)
                 if legal_moves:
-                    return legal_moves[0], False
-                return None, False
+                    return legal_moves[0]
+                return None
             self.past_moves_hash[h] = best_move
             return best_move
 
@@ -192,11 +194,15 @@ class Bot:
         if best is None:
             legal_moves = list(board.legal_moves)
             if legal_moves:
-                return legal_moves[0], False
-            return None, False
+                return legal_moves[0]
+            return None
         
         self.past_moves_hash[h] = best
+        self.move_chosen(best)
         return best
+
+    def move_chosen(self, move):
+        pass
 
     def reset(self):
         self.transposition_table.clear()

@@ -45,7 +45,6 @@ class chessGUI:
         self.selected = None
         self.legal_targets = []
         self.legal_moves = []
-        self.nudge_targets = []
         self.prev_sq = []
 
         self.status = tk.Label(self.root, text="", font=("Arial", 14))
@@ -318,7 +317,7 @@ class chessGUI:
                 self.selected = sq
                 self.compute_targets(sq)
         else:
-            if sq in self.legal_targets or sq in self.nudge_targets:
+            if sq in self.legal_targets:
                 promotion = None
                 moving_piece = self.board.piece_at(self.selected)
                 # handle pawn promotion
@@ -349,13 +348,13 @@ class chessGUI:
         board_copy = self.board.copy()
 
         def compute_move():
-            move, is_nudge = current_player.choose_move(board_copy)
+            move = current_player.choose_move(board_copy)
             # schedule application of the move back on the main thread
-            self.root.after(0, lambda: self._apply_bot_move(move, is_nudge))
+            self.root.after(0, lambda: self._apply_bot_move(move))
 
         threading.Thread(target=compute_move, daemon=True).start()
 
-    def _apply_bot_move(self, move, is_nudge):
+    def _apply_bot_move(self, move):
         # this runs on the Tkinter main thread
         if move is not None:
             self.prev_sq.clear()
