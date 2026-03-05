@@ -5,10 +5,9 @@ import chess
 import chess.pgn
 import math
 import threading
-import base.ChessBotBase
-
-chess_bot = base.ChessBotBase.Bot
-human = str
+import base64
+from io import BytesIO
+from base64 import b64decode
 
 SQUARE_SIZE = 70
 LIGHT = "#f0d9b5"
@@ -18,7 +17,7 @@ PREV_DARK = "#B49B0A"
 HIGHLIGHT = "#ec3838"
 
 class chessGUI:
-    def __init__(self, white_player: chess_bot | human, black_player: chess_bot | human):
+    def __init__(self, white_player='human', black_player=None):
         self.move_time = 100
         self.board = chess.Board()
         self.white_player = white_player
@@ -52,6 +51,49 @@ class chessGUI:
 
         self.eval_frame = tk.Frame(self.root)
         self.eval_frame.pack()
+
+        TARGET_SIZE = (80, 80) 
+
+        whitebot_image = None
+        blackbot_image = None
+        try: whitebot_image = white_player.IMAGE_DATA
+        except: whitebot_image = None
+        try: blackbot_image = black_player.IMAGE_DATA
+        except: blackbot_image = None
+
+        if whitebot_image:
+            try:
+                # Clean the string
+                data = whitebot_image.split("base64,")[-1] if "base64," in str(whitebot_image) else whitebot_image
+                
+                # 1. Decode and open with Pillow
+                img_data = b64decode(data)
+                pil_img = Image.open(BytesIO(img_data))
+                
+                # 2. Resize to EXACT pixels
+                resized_img = pil_img.resize(TARGET_SIZE, Image.Resampling.LANCZOS)
+                
+                # 3. Convert to Tkinter format and save unique reference
+                self.white_img = ImageTk.PhotoImage(resized_img)
+                self.white_label = tk.Label(self.eval_frame, image=self.white_img)
+                self.white_label.pack(side=tk.LEFT, padx=5)
+            except Exception as e:
+                print(f"White image error: {e}")
+
+        if blackbot_image:
+            try:
+                data = blackbot_image.split("base64,")[-1] if "base64," in str(blackbot_image) else blackbot_image
+                
+                # Repeat for Black bot
+                img_data = b64decode(data)
+                pil_img = Image.open(BytesIO(img_data))
+                resized_img = pil_img.resize(TARGET_SIZE, Image.Resampling.LANCZOS)
+                
+                self.black_img = ImageTk.PhotoImage(resized_img)
+                self.black_label = tk.Label(self.eval_frame, image=self.black_img)
+                self.black_label.pack(side=tk.RIGHT, padx=5)
+            except Exception as e:
+                print(f"Black image error: {e}")
 
         self.white_eval = tk.Label(
             self.eval_frame,
@@ -91,18 +133,8 @@ class chessGUI:
 
     def update_evaluation(self, white_eval, black_eval):
         """Update the evaluation display for both sides"""
-        try: w_name = self.white_player.name() 
-        except: w_name = None
-        try: b_name = self.black_player.name()
-        except: b_name = None
-        if w_name != None:
-            self.white_eval.config(text=f"White ({w_name}): {white_eval:+.1f}")
-        else:
-            self.white_eval.config(text=f"Player")
-        if b_name != None:
-            self.black_eval.config(text=f"Black ({b_name}): {black_eval:+.1f}")
-        else:
-            self.black_eval.config(text=f"Player")
+        self.white_eval.config(text=f"White: {white_eval:+.1f}")
+        self.black_eval.config(text=f"Black: {black_eval:+.1f}")
 
     def ask_promotion(self):
         """Ask user for pawn promotion piece"""

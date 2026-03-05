@@ -4,37 +4,39 @@ import base.ChessBotBase as ChessBotBase
 import math
 
 
+#[Base, Beginning, Middle, End]
+
+PAWN = [1, 0, 0, 0]
+PAWN_DEVELOPMENT_MOD = [0, 2, 1, 0.15]
+
+KNIGHT = [3, 0, 0, 0]
+KNIGHT_DEVELOPMENT_MOD = [0, 3, 2, 0.25]
+
+BISHOP = [4, 0, 0, 0]
+BISHOP_DEVELOPMENT_MOD = [0, 2, 3, 0.25]
+
+ROOK = [6, 0, 0, 0]
+ROOK_DEVELOPMENT_MOD = [0, -2, 2, 7]
+
+QUEEN = [11, 0, -2, 1]
+QUEEN_DEVELOPMENT_MOD = [0, -10, 2, 9]
 
 
-PAWN = 1
-PAWN_DEVELOPMENT_MOD = 0.5
+TEMPO_MOD = [1.05,0,0,0]
 
-KNIGHT = 3
-KNIGHT_DEVELOPMENT_MOD = 2
+MATERIAL_MOD = [1, 0.5, -0.2, 3]
+OP_MATERIAL_MOD = [-1.05, -0.5, 0.2, 0]
 
-BISHOP = 4
-BISHOP_DEVELOPMENT_MOD = 1.25
+DEVELOP_MOD = [0.75, 0, 0, 0]
+OP_DEVELOP_MOD = [0.7, 0, 0, 0]
 
-ROOK = 6
-ROOK_DEVELOPMENT_MOD = 2
+COVERAGE_MOD = [0.0025, 0, 0, 0]
+OP_COVERAGE_MOD = [-0.003, 0, 0, 0]
 
-QUEEN = 11
-QUEEN_DEVELOPMENT_MOD = 4
-EARLY_QUEEN_DEVELOPMENT_MOD = -100
+SIMPLIFICATION_MOD = [0.05, 0, 0, 0]
 
-
-TEMPO_MOD = 1.1
-
-MATERIAL_MOD = 1.3
-OP_MATERIAL_MOD = -1
-
-TRAP_BONUS = 1
-OP_TRAP_BONUS = -1
-
-DEVELOP_MOD = 0.15
-OP_DEVELOP_MOD = -0.125
-
-ATTACKER_MOD = 0.01
+def bound(x):
+    return max(min(x,1),0)
 
 class Bot(ChessBotBase.Bot):
     pieces = []
@@ -108,18 +110,20 @@ class Bot(ChessBotBase.Bot):
         self.pieces = list(self.pawns) + list(self.knights) + list(self.bishops) + list(self.rooks) + list(self.queens)
         self.op_pieces = list(self.op_pawns) + list(self.op_knights) + list(self.op_bishops) + list(self.op_rooks) + list(self.op_queens)
 
-    def is_developed(self, square, piece):
+        self.total_pieces = self.pieces + self.op_pieces
+
+    def is_developed(self, square, piece, color):
         rank = chess.square_rank(square)
-        
+
         if piece == chess.PAWN:
-            return rank != (1 if self.color == chess.WHITE else 6)
+            return rank != (1 if color == chess.WHITE else 6)
 
         start_squares = {
-            chess.KNIGHT: [chess.B1, chess.G1] if self.color == chess.WHITE else [chess.B8, chess.G8],
-            chess.BISHOP: [chess.C1, chess.F1] if self.color == chess.WHITE else [chess.C8, chess.F8],
-            chess.ROOK:   [chess.A1, chess.H1] if self.color == chess.WHITE else [chess.A8, chess.H8],
-            chess.QUEEN:  [chess.D1] if self.color == chess.WHITE else [chess.D8],
-            chess.KING:   [chess.E1] if self.color == chess.WHITE else [chess.E8],
+            chess.KNIGHT: [chess.B1, chess.G1] if color == chess.WHITE else [chess.B8, chess.G8],
+            chess.BISHOP: [chess.C1, chess.F1] if color == chess.WHITE else [chess.C8, chess.F8],
+            chess.ROOK:   [chess.A1, chess.H1] if color == chess.WHITE else [chess.A8, chess.H8],
+            chess.QUEEN:  [chess.D1] if color == chess.WHITE else [chess.D8],
+            chess.KING:   [chess.E1] if color == chess.WHITE else [chess.E8],
         }
 
         return square not in start_squares.get(piece, [])
@@ -143,8 +147,9 @@ class Bot(ChessBotBase.Bot):
                 square = chess.square(file, rank)
                 piece = board.piece_type_at(square)
                 color = board.color_at(square)
-                dev = self.is_developed(square, piece)
-                if color == self.color:
+                dev = self.is_developed(square, piece, self.color)
+                op_dev = self.is_developed(square, piece, not self.color) 
+                if color == self.color and dev:
                     if piece == chess.PAWN:
                         self.pawns_dev.append(square)
                     elif piece == chess.KNIGHT:
@@ -155,7 +160,7 @@ class Bot(ChessBotBase.Bot):
                         self.rooks_dev.append(square)
                     elif piece == chess.QUEEN:
                         self.queens_dev.append(square)
-                else:
+                elif color != self.color and op_dev:
                     if piece == chess.PAWN:
                         self.op_pawns_dev.append(square)
                     elif piece == chess.KNIGHT:
@@ -173,64 +178,75 @@ class Bot(ChessBotBase.Bot):
 
         ################### SETUP ###################
 
+        def mod_list(MOD_LIST):
+            score = MOD_LIST[0]
+            score += MOD_LIST[1] * BEGINNING
+            score += MOD_LIST[2] * MIDDLE
+            score += MOD_LIST[3] * END
+            return score
+
         self.get_pieces(board)
         self.get_developed(board)
 
-        p = len(self.pieces) / 26
+        p = len(self.pieces) / 15
 
-        BEGINNING = (3 * p) - 2
-        MIDDLE = 1 - abs(3 * p - 1.5)
-        END = 1 - (3 * p)
+        BEGINNING = bound((3 * p) - 2)
+        MIDDLE = bound(1 - abs(3 * p - 1.5))
+        END = bound(1 - (3 * p))
 
         ################### MATERIAL ###################
 
-        material = len(self.pawns) * PAWN
-        material += len(self.knights) * KNIGHT
-        material += len(self.bishops) * BISHOP
-        material += len(self.rooks) * ROOK
-        material += len(self.queens) * QUEEN
+        material = len(self.pawns) * mod_list(PAWN)
+        material += len(self.knights) * mod_list(KNIGHT)
+        material += len(self.bishops) * mod_list(BISHOP)
+        material += len(self.rooks) * mod_list(ROOK)
+        material += len(self.queens) * mod_list(QUEEN)
 
-        op_material = len(self.op_pawns) * PAWN
-        op_material += len(self.op_knights) * KNIGHT
-        op_material += len(self.op_bishops) * BISHOP
-        op_material += len(self.op_rooks) * ROOK
-        op_material += len(self.op_queens) * QUEEN
+        op_material = len(self.op_pawns) * mod_list(PAWN)
+        op_material += len(self.op_knights) * mod_list(KNIGHT)
+        op_material += len(self.op_bishops) * mod_list(BISHOP)
+        op_material += len(self.op_rooks) * mod_list(ROOK)
+        op_material += len(self.op_queens) * mod_list(QUEEN)
         
         ################### DEVELOPMENT ###################
+        
+        development = len(self.pawns_dev) * mod_list(PAWN_DEVELOPMENT_MOD)
+        development += len(self.knights_dev) * mod_list(KNIGHT_DEVELOPMENT_MOD)
+        development += len(self.bishops_dev) * mod_list(BISHOP_DEVELOPMENT_MOD)
+        development += len(self.rooks_dev) * mod_list(ROOK_DEVELOPMENT_MOD)
+        development += len(self.queens_dev) * mod_list(QUEEN_DEVELOPMENT_MOD)
 
-        development = len(self.pawns_dev) * PAWN_DEVELOPMENT_MOD
-        development += len(self.knights_dev) * KNIGHT_DEVELOPMENT_MOD
-        development += len(self.bishops_dev) * BISHOP_DEVELOPMENT_MOD
-        development += len(self.rooks_dev) * ROOK_DEVELOPMENT_MOD
-        development += len(self.queens_dev) * QUEEN_DEVELOPMENT_MOD
-        development += len(self.queens_dev) * EARLY_QUEEN_DEVELOPMENT_MOD * BEGINNING
-
-        op_development = len(self.op_pawns_dev) * PAWN_DEVELOPMENT_MOD
-        op_development += len(self.op_knights_dev) * KNIGHT_DEVELOPMENT_MOD
-        op_development += len(self.op_bishops_dev) * BISHOP_DEVELOPMENT_MOD
-        op_development += len(self.op_rooks_dev) * ROOK_DEVELOPMENT_MOD
-        op_development += len(self.op_queens_dev) * QUEEN_DEVELOPMENT_MOD
-        op_development += len(self.op_queens_dev) * EARLY_QUEEN_DEVELOPMENT_MOD * BEGINNING
+        op_development = len(self.op_pawns_dev) * mod_list(PAWN_DEVELOPMENT_MOD)
+        op_development += len(self.op_knights_dev) * mod_list(KNIGHT_DEVELOPMENT_MOD)
+        op_development += len(self.op_bishops_dev) * mod_list(BISHOP_DEVELOPMENT_MOD)
+        op_development += len(self.op_rooks_dev) * mod_list(ROOK_DEVELOPMENT_MOD)
+        op_development += len(self.op_queens_dev) * mod_list(QUEEN_DEVELOPMENT_MOD)
 
         ################### ATTACKS / DEFENCE ###################
 
         coverage = []
+        op_coverage = []
 
         for square in self.pieces:
-            piece_type = board.piece_type_at(square)
-            if board.is_pinned(not self.color, square):
-                pass
-            coverage += board.attacks(square)
+            if not board.is_pinned(not self.color, square):
+                coverage += list(board.attacks(square))
+            
+        for square in self.op_pieces:
+            if not board.is_pinned(self.color, square):
+                op_coverage += list(board.attacks(square))
+            
 
         ################### EVALUATION ###################
 
-        score += material * MATERIAL_MOD
-        score += op_material * OP_MATERIAL_MOD
+        score += material * mod_list(MATERIAL_MOD)
+        score += op_material * mod_list(OP_MATERIAL_MOD)
+        score -= len(self.total_pieces) * mod_list(SIMPLIFICATION_MOD)
 
-        score += development * DEVELOP_MOD
-        score += development * OP_DEVELOP_MOD
+        score += development * mod_list(DEVELOP_MOD)
+        score += op_development * mod_list(OP_DEVELOP_MOD)
 
-        score += len(coverage) * ATTACKER_MOD
+        score += len(coverage) * mod_list(COVERAGE_MOD)
+        score += len(op_coverage) * mod_list(OP_COVERAGE_MOD)
 
         if board.is_checkmate():
             if board.turn == self.color:
@@ -238,10 +254,11 @@ class Bot(ChessBotBase.Bot):
             else:
                 return math.inf
             
+
         if board.turn == self.color:
-            score *= TEMPO_MOD
+            score *= mod_list(TEMPO_MOD)
         else:
-            score /= TEMPO_MOD
+            score /= mod_list(TEMPO_MOD)
 
         return score
     

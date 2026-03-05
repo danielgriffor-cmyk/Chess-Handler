@@ -4,6 +4,8 @@ import chess.polyglot
 import random
 import math
 from concurrent.futures import ThreadPoolExecutor
+import base64
+from pathlib import Path
 
 PIECE_VALUE = {
     chess.PAWN: 1,
@@ -39,6 +41,26 @@ class Bot:
         self.depth = depth
         self.qsearch = qsearch
         self.qdepth = qdepth
+        self.IMAGE_DATA = self.to_image_data(self.image())
+
+    def image(self):
+        return "base/ChessBotBaseIcon.png"
+
+    def to_image_data(self, image_path: str) -> str:
+        """
+        Encodes the image at the given path as a base64 string
+        suitable for use in IMAGE_DATA.
+        """
+        path = Path(image_path)
+        if not path.is_file():
+            raise FileNotFoundError(f"Image not found: {image_path}")
+
+        with open(path, "rb") as f:
+            encoded_bytes = base64.b64encode(f.read())
+            encoded_str = encoded_bytes.decode("utf-8")
+
+        # prepend the standard base64 header for PNG
+        return f"data:image/png;base64,{encoded_str}"
 
     def name(self):
         return f"Chess Bot (depth {self.depth})"

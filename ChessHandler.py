@@ -14,7 +14,7 @@ import bots.alephNull as AlephNull
 PLAYER = "human"
 
 white_bot = AlephNull.Bot(color = chess.WHITE, depth=3)
-black_bot = ShallowTeal.Bot(color = chess.BLACK, depth=3)
+black_bot = KamikazeGambiterBot.Bot(color = chess.BLACK, depth=3)
 
 gui = chessGUI(white_player=white_bot, black_player=black_bot)
 gui.move_time = 100

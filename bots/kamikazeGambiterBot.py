@@ -4,6 +4,9 @@ import chess
 class Bot(BotBase):
     def name(self):
         return "Kamikaze Gambiter Bot"
+    
+    def image(self):
+        return "icons/KamikazeGambiterBotIcon.png"
 
     def evaluate(self, board):
         """
