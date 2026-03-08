@@ -22,7 +22,7 @@ QUEEN = [11, 0, -2, 1]
 QUEEN_DEVELOPMENT_MOD = [0, -10, 2, 9]
 
 
-TEMPO_MOD = [1.05,0,0,0]
+TEMPO_MOD = [1.05,0.45,0.25,0]
 
 MATERIAL_MOD = [1, 0.5, -0.2, 3]
 OP_MATERIAL_MOD = [-1.05, -0.5, 0.2, 0]
@@ -45,7 +45,10 @@ class Bot(ChessBotBase.Bot):
     def name(self):
         return "Aleph Null"
 
-    def openning(self, board):
+    def image(self):
+        return "icons/AlephNullIcon.png"
+
+    def opening(self, board):
         fen = str(board.fen().split(" ")[0])
         move = None
         if self.turn > 1:
@@ -79,7 +82,7 @@ class Bot(ChessBotBase.Bot):
             move = "g1f3"
         elif fen == "rnbqkbnr/p1pppppp/8/1p6/4P3/8/PPPP1PPP/RNBQKBNR": # e4 b5 ?!
             move = "f1b5"
-        elif self.turn == 0 and self.color == chess.WHITE:
+        elif self.turn == 1 and self.color == chess.WHITE:
             move = "d2d4"
 
         if move == None:
@@ -178,13 +181,6 @@ class Bot(ChessBotBase.Bot):
 
         ################### SETUP ###################
 
-        def mod_list(MOD_LIST):
-            score = MOD_LIST[0]
-            score += MOD_LIST[1] * BEGINNING
-            score += MOD_LIST[2] * MIDDLE
-            score += MOD_LIST[3] * END
-            return score
-
         self.get_pieces(board)
         self.get_developed(board)
 
@@ -193,6 +189,13 @@ class Bot(ChessBotBase.Bot):
         BEGINNING = bound((3 * p) - 2)
         MIDDLE = bound(1 - abs(3 * p - 1.5))
         END = bound(1 - (3 * p))
+
+        def mod_list(MOD_LIST):
+            score = MOD_LIST[0]
+            score += MOD_LIST[1] * BEGINNING
+            score += MOD_LIST[2] * MIDDLE
+            score += MOD_LIST[3] * END
+            return score
 
         ################### MATERIAL ###################
 
@@ -259,6 +262,12 @@ class Bot(ChessBotBase.Bot):
             score *= mod_list(TEMPO_MOD)
         else:
             score /= mod_list(TEMPO_MOD)
+
+        if board.is_repetition(1):
+            score /= 3
+        
+        if board.is_game_over() and not board.is_checkmate():
+            score /= -8
 
         return score
     

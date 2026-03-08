@@ -14,7 +14,7 @@ import bots.alephNull as AlephNull
 PLAYER = "human"
 
 white_bot = AlephNull.Bot(color = chess.WHITE, depth=3)
-black_bot = KamikazeGambiterBot.Bot(color = chess.BLACK, depth=3)
+black_bot = AlephNull.Bot(color = chess.BLACK, depth=2, qsearch=True)
 
 gui = chessGUI(white_player=white_bot, black_player=black_bot)
 gui.move_time = 100
@@ -23,7 +23,7 @@ gui.move_time = 100
 gui.run()
 
 pgn = chess.pgn.Game.from_board(gui.board)
-pgn.headers["White"] = "Player" if white_bot == "human" else white_bot.name()
-pgn.headers["Black"] = "Player" if black_bot == "human" else black_bot.name()
+pgn.headers["White"] = "Player" if white_bot == "human" else white_bot.true_name()
+pgn.headers["Black"] = "Player" if black_bot == "human" else black_bot.true_name()
 
 print(pgn)

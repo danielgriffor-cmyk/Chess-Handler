@@ -7,7 +7,7 @@ class Bot(ChessBotBase.Bot):
     def name(self):
         return "Complex Chess Bot"
 
-    def openning(self, board):
+    def opening(self, board):
         fen = str(board.fen().split(" ")[0])
         move = None
         if self.turn > 1:

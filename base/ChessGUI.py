@@ -151,8 +151,8 @@ class chessGUI:
         """Copy the current game's PGN to the clipboard"""
         try:
             pgn = chess.pgn.Game.from_board(self.board)
-            pgn.headers["White"] = "Human" if self.white_player == "human" else self.white_player.name()
-            pgn.headers["Black"] = "Human" if self.black_player == "human" else self.black_player.name()
+            pgn.headers["White"] = "Human" if self.white_player == "human" else self.white_player.true_name()
+            pgn.headers["Black"] = "Human" if self.black_player == "human" else self.black_player.true_name()
             pgn_str = str(pgn)
             self.root.clipboard_clear()
             self.root.clipboard_append(pgn_str)

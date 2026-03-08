@@ -29,12 +29,6 @@ def mvv_lva_score(board, move):
     return PIECE_VALUE[victim.piece_type] * 10 - PIECE_VALUE[attacker.piece_type]
 
 class Bot:
-    turn = 0
-    transposition_table = {}
-    past_moves_hash = {}
-    is_enpassant = False
-    is_castle = False
-    is_promote = False
 
     def __init__(self, color=chess.BLACK, depth=2, qsearch=False, qdepth=4):
         self.color = color
@@ -42,6 +36,13 @@ class Bot:
         self.qsearch = qsearch
         self.qdepth = qdepth
         self.IMAGE_DATA = self.to_image_data(self.image())
+
+        self.turn = 0
+        self.transposition_table = {}
+        self.past_moves_hash = {}
+        self.is_enpassant = False
+        self.is_castle = False
+        self.is_promote = False
 
     def image(self):
         return "base/ChessBotBaseIcon.png"
@@ -64,21 +65,15 @@ class Bot:
 
     def name(self):
         return f"Chess Bot (depth {self.depth})"
+    
+    def true_name(self):
+        return self.name() + f"(depth {self.depth}, qsearch {self.qdepth if self.qsearch else "None"})"
 
     def evaluate(self, board):
         raise NotImplementedError
 
-    def openning(self, board):
+    def opening(self, board):
         return None
-
-    def main_eval(self, board):
-        h = chess.polyglot.zobrist_hash(board)
-        if h in self.transposition_table:
-            return self.transposition_table[h] + random.random() / 1000
-        else:
-            score = self.evaluate(board)
-            self.transposition_table[h] = score
-        return score + random.random() / 1000
 
     def all_moves(self, board):
         moves = list(board.legal_moves)
@@ -88,71 +83,71 @@ class Bot:
         )
         return moves
 
-    def minimax(self, board, depth, alpha, beta, maximizing):
+    def quiescence(self, board, depth, alpha, beta):
+        stand_pat = self.main_eval(board)  # now correctly perspective-relative
+        
+        if stand_pat >= beta:
+            return beta
+        alpha = max(alpha, stand_pat)
 
         if depth == 0 or board.is_game_over():
-            return self.main_eval(board)
+            return alpha
 
-        if maximizing:
-            value = -1e9
-            for move in board.legal_moves:
-                board.push(move)
-                value = max(value, self.minimax(board, depth - 1, alpha, beta, False))
-                board.pop()
-                alpha = max(alpha, value)
-                if alpha >= beta:
-                    break
-            return value
-        else:
-            value = 1e9
-            for move in board.legal_moves:
-                board.push(move)
-                value = min(value, self.minimax(board, depth - 1, alpha, beta, True))
-                board.pop()
-                beta = min(beta, value)
-                if beta <= alpha:
-                    break
-            return value
-        
-    def perspective_eval(self, board):
-        base = self.evaluate(board)
-        return base if board.turn == self.color else -base
-
-    def quiescence(self, board, depth):
-        stand_pat = self.main_eval(board)
-        
-        if depth == 0 or board.is_repetition(2):
-            return stand_pat
-        
-        best_score = stand_pat
-        
-        for move in board.legal_moves:
+        for move in self.all_moves(board):
             if not board.is_capture(move) and not board.gives_check(move):
                 continue
             board.push(move)
-            score = -self.quiescence(board, depth - 1)
+            score = -self.quiescence(board, depth - 1, -beta, -alpha)
             board.pop()
-            best_score = max(best_score, score)
-        
-        return best_score
-        
-    def choose_move(self, board, depth=None):
-        
-        move = None
-        move = self.openning(board)
+            if score >= beta:
+                return beta
+            alpha = max(alpha, score)
 
-        if move != None:
-            if move in board.legal_moves:
-                return move
+        return alpha
 
-        self.turn += 1
+    def main_eval(self, board):
+        score = self.evaluate(board)
+        return score if board.turn == self.color else -score
 
+    def minimax(self, board, depth, alpha, beta):
         h = chess.polyglot.zobrist_hash(board)
 
-        if h in self.past_moves_hash:
-            return self.past_moves_hash[h]
+        # Only use cached result if it was searched at least as deep
+        if h in self.transposition_table:
+            cached_score, cached_depth = self.transposition_table[h]
+            if cached_depth >= depth:
+                return cached_score
 
-        # --- Mate in 1 override ---
+        if depth == 0 or board.is_game_over():
+            if self.qsearch:
+                return self.quiescence(board, self.qdepth, alpha, beta)
+            return self.main_eval(board)
+
+        value = -1e9
+        for move in self.all_moves(board):
+            board.push(move)
+            value = max(value, -self.minimax(board, depth - 1, -beta, -alpha))
+            board.pop()
+            alpha = max(alpha, value)
+            if alpha >= beta:
+                break
+
+        # Cache with depth so shallow results don't override deep ones
+        self.transposition_table[h] = (value, depth)
+        return value
+
+    def choose_move(self, board, depth=None, remaining_time=None):
+        move = self.opening(board)
+        if move is not None and move in board.legal_moves:
+            self.turn += 1
+            return move
+
+        self.turn += 1
+        h = chess.polyglot.zobrist_hash(board)
+
+        #if h in self.past_moves_hash:
+            #return self.past_moves_hash[h]
+
         for move in board.legal_moves:
             board.push(move)
             if board.is_checkmate():
@@ -160,61 +155,43 @@ class Bot:
                 return move
             board.pop()
 
-        # --- normal minimax ---
         if depth is None:
             depth = self.depth
 
-        maximizing = board.turn == self.color
+        if remaining_time is not None:
+            if remaining_time < 50:
+                depth = max(1, depth - 3)
+            elif remaining_time < 300:
+                depth = max(1, depth - 2)
+            elif remaining_time < 500:
+                depth = max(1, depth - 1)
 
-        # if we're searching deeper than one ply, we can evaluate each first move
-        # in parallel to make use of multiple cores. the recursive minimax call
-        # uses its own board copy so no shared state is modified.
+        moves = self.all_moves(board)
+
         if depth > 1:
-            moves = self.all_moves(board)
-            best_score = -1e9 if maximizing else 1e9
-            best_move = None
-
             def eval_move(move):
                 board_copy = board.copy()
                 board_copy.push(move)
-                score = self.minimax(board_copy, depth - 1, -1e9, 1e9, not maximizing)
+                score = -self.minimax(board_copy, depth - 1, -1e9, 1e9)
                 return score, move
 
             with ThreadPoolExecutor() as executor:
-                for score, move_tuple in executor.map(eval_move, moves):
-                    if (maximizing and score > best_score) or (not maximizing and score < best_score):
-                        best_score = score
-                        best_move = move_tuple
+                scored_moves = list(executor.map(eval_move, moves))
+        else:
+            scored_moves = []
+            for move in moves:
+                board.push(move)
+                score = -self.minimax(board, depth - 1, -1e9, 1e9)
+                board.pop()
+                scored_moves.append((score, move))
 
-            if best_move is None:
-                legal_moves = list(board.legal_moves)
-                if legal_moves:
-                    return legal_moves[0]
-                return None
-            self.past_moves_hash[h] = best_move
-            self.move_chosen(best_move)
-            return best_move
+        if not scored_moves:
+            return None
 
-        # fall back to single-threaded minimax for shallow searches
-        best_score = -1e9 if maximizing else 1e9
-        best_move = None
-
-        for move in board.legal_moves:
-            board.push(move)
-            score = self.minimax(board, depth - 1, -1e9, 1e9, not maximizing)
-            board.pop()
-
-            if (maximizing and score > best_score) or (not maximizing and score < best_score):
-                best_score = score
-                best_move = move
-
-        if best_move is None:
-            legal_moves = list(board.legal_moves)
-
-            move = legal_moves[0] if legal_moves else None
-            self.past_moves_hash[h] = move
-            self.move_chosen(move)
-            return move
+        scored_moves.sort(key=lambda x: x[0], reverse=True)
+        best_score = scored_moves[0][0]
+        best_moves = [m for s, m in scored_moves if abs(s - best_score) < 1e-6]
+        best_move = random.choice(best_moves) if best_moves else scored_moves[0][1]
 
         self.past_moves_hash[h] = best_move
         self.move_chosen(best_move)
