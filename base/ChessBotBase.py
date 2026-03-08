@@ -64,10 +64,10 @@ class Bot:
         return f"data:image/png;base64,{encoded_str}"
 
     def name(self):
-        return f"Chess Bot (depth {self.depth})"
+        return f"Chess Bot"
     
     def true_name(self):
-        return self.name() + f"(depth {self.depth}, qsearch {self.qdepth if self.qsearch else "None"})"
+        return self.name() + f" (depth {self.depth}, qsearch {self.qdepth if self.qsearch else "None"})"
 
     def evaluate(self, board):
         raise NotImplementedError

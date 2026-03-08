@@ -133,8 +133,12 @@ class chessGUI:
 
     def update_evaluation(self, white_eval, black_eval):
         """Update the evaluation display for both sides"""
-        self.white_eval.config(text=f"White: {white_eval:+.1f}")
-        self.black_eval.config(text=f"Black: {black_eval:+.1f}")
+        try: wname = self.white_player.true_name()
+        except: wname = "Player"
+        try: bname = self.black_player.true_name()
+        except: bname = "Player"
+        self.white_eval.config(text=f"White ({wname}): {white_eval:+.1f}")
+        self.black_eval.config(text=f"Black ({bname}): {black_eval:+.1f}")
 
     def ask_promotion(self):
         """Ask user for pawn promotion piece"""

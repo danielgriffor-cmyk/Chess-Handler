@@ -21,8 +21,8 @@ ROOK_DEVELOPMENT_MOD = [0, -2, 2, 7]
 QUEEN = [11, 0, -2, 1]
 QUEEN_DEVELOPMENT_MOD = [0, -10, 2, 9]
 
+SIMPLIFICATION_MOD = [0.05, 0, 0, 0]
 
-TEMPO_MOD = [1.05,0.45,0.25,0]
 
 MATERIAL_MOD = [1, 0.5, -0.2, 3]
 OP_MATERIAL_MOD = [-1.05, -0.5, 0.2, 0]
@@ -33,7 +33,14 @@ OP_DEVELOP_MOD = [0.7, 0, 0, 0]
 COVERAGE_MOD = [0.0025, 0, 0, 0]
 OP_COVERAGE_MOD = [-0.003, 0, 0, 0]
 
-SIMPLIFICATION_MOD = [0.05, 0, 0, 0]
+ATTACKED_MOD = [-0.1, 0, 0, 0]
+OP_ATTACKED_MOD = [0.1, 0, 0, 0]
+
+DEFENDED_MOD = [0.1, 0, 0, 0]
+OP_DEFENDED_MOD = [-0.1, 0, 0, 0]
+
+
+TEMPO_MOD = [1.05,0.45,0.25,0]
 
 def bound(x):
     return max(min(x,1),0)
@@ -180,6 +187,12 @@ class Bot(ChessBotBase.Bot):
         score = 0
 
         ################### SETUP ###################
+        
+        if board.is_checkmate():
+            if board.turn == self.color:
+                return -math.inf
+            else:
+                return math.inf
 
         self.get_pieces(board)
         self.get_developed(board)
@@ -230,13 +243,37 @@ class Bot(ChessBotBase.Bot):
         coverage = []
         op_coverage = []
 
+        defended = []
+        op_defended = []
+
+        attacked = []
+        op_attacked = []
+
         for square in self.pieces:
+            attacks = board.attacks(square)
             if not board.is_pinned(not self.color, square):
-                coverage += list(board.attacks(square))
-            
+                coverage += list(attacks)
+            for square in list(attacks):
+                piece = board.piece_at(square)
+                if piece == None:
+                    continue
+                if piece.color == self.color:
+                    defended.append(piece)
+                if piece.color != self.color:
+                    attacked.append(piece)
+
         for square in self.op_pieces:
+            attacks = board.attacks(square)
             if not board.is_pinned(self.color, square):
-                op_coverage += list(board.attacks(square))
+                op_coverage += list(attacks)
+            for square in list(attacks):
+                piece = board.piece_at(square)
+                if piece == None:
+                    continue
+                if piece.color != self.color:
+                    op_defended.append(piece)
+                if piece.color == self.color:
+                    op_attacked.append(piece)
             
 
         ################### EVALUATION ###################
@@ -250,23 +287,23 @@ class Bot(ChessBotBase.Bot):
 
         score += len(coverage) * mod_list(COVERAGE_MOD)
         score += len(op_coverage) * mod_list(OP_COVERAGE_MOD)
+        
+        score += len(attacked) * mod_list(ATTACKED_MOD)
+        score += len(op_attacked) * mod_list(OP_ATTACKED_MOD)
 
-        if board.is_checkmate():
-            if board.turn == self.color:
-                return -math.inf
-            else:
-                return math.inf
-            
+        score += len(defended) * mod_list(DEFENDED_MOD)
+        score += len(op_defended) * mod_list(OP_DEFENDED_MOD)
+
 
         if board.turn == self.color:
             score *= mod_list(TEMPO_MOD)
         else:
             score /= mod_list(TEMPO_MOD)
 
-        if board.is_repetition(1):
-            score /= 3
         
         if board.is_game_over() and not board.is_checkmate():
+            score /= -8
+        elif board.is_repetition(2):
             score /= -8
 
         return score
