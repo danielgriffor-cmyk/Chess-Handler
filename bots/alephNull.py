@@ -21,7 +21,7 @@ ROOK_DEVELOPMENT_MOD = [0, -2, 2, 7]
 QUEEN = [11, 0, -2, 1]
 QUEEN_DEVELOPMENT_MOD = [0, -10, 2, 9]
 
-SIMPLIFICATION_MOD = [0.05, 0, 0, 0]
+SIMPLIFICATION_MOD = [0, 0, 0, 0]
 
 
 MATERIAL_MOD = [1, 0.5, -0.2, 3]
@@ -40,7 +40,7 @@ DEFENDED_MOD = [0.1, 0, 0, 0]
 OP_DEFENDED_MOD = [-0.1, 0, 0, 0]
 
 
-TEMPO_MOD = [1.05, 0.45, 0.25, 0.45]
+TEMPO_MOD = [1, 0.15, 0.05, 0.10]
 
 KINGSIDE_CASTLE_MOD = [0.5, 0.5, 1, 1.5]
 QUEENSIDE_CASTLE_MOD = [0.5, 0.5, 1, 1.5]
@@ -187,8 +187,8 @@ KING_TABLE = [EMPTY, [
       0,   0, -20,   0,   0, -20,   0,   0,  # rank 8
 ] ]
 
-PST_MOD = [0.02, 0, 0, 0]
-OP_PST_MOD = [-0.01, 0, 0, 0]
+PST_MOD = [0.06, 0.15, -0.02, -0.03]
+OP_PST_MOD = [-0.03, -0.1, 0.1, 0.02]
 
 def bound(x):
     return max(min(x,1),0)
