@@ -187,7 +187,7 @@ KING_TABLE = [EMPTY, [
       0,   0, -20,   0,   0, -20,   0,   0,  # rank 8
 ] ]
 
-PST_MOD = 0.02
+PST_MOD = [0.02, 0, 0, 0]
 
 def bound(x):
     return max(min(x,1),0)
@@ -328,7 +328,7 @@ class Bot(ChessBotBase.Bot):
                         self.op_rooks_dev.append(square)
                     elif piece == chess.QUEEN:
                         self.op_queens_dev.append(square)
-    
+        
     def evaluate(self, board: chess.Board):
 
         score = 0
@@ -356,6 +356,15 @@ class Bot(ChessBotBase.Bot):
             score += MOD_LIST[2] * MIDDLE
             score += MOD_LIST[3] * END
             return score
+        
+        def pst_lookup(table, square, color):
+            if color == chess.WHITE:
+                idx = square
+            else:
+                rank = chess.square_rank(square)
+                file = chess.square_file(square)
+                idx = (7 - rank) * 8 + file
+            return table[0][idx] + table[1][idx] * BEGINNING + table[2][idx] * MIDDLE + table[3][idx] * END
 
         ################### MATERIAL ###################
 
@@ -423,13 +432,36 @@ class Bot(ChessBotBase.Bot):
                     op_attacked.append(piece)
             
 
-        ################### SPECIAL ###################
+        ################### CASTLE ###################
 
         castle_k_score = 1 if self.has_castled == chess.KING else 0
         castle_q_score = 1 if self.has_castled == chess.QUEEN else 0
 
         op_castle_k_score = 1 if self.op_has_castled == chess.KING else 0
         op_castle_q_score = 1 if self.op_has_castled == chess.QUEEN else 0
+
+        ################### PST ###################
+
+        pst_map = {
+            chess.PAWN:   PAWN_TABLE,
+            chess.KNIGHT: KNIGHT_TABLE,
+            chess.BISHOP: BISHOP_TABLE,
+            chess.ROOK:   ROOK_TABLE,
+            chess.QUEEN:  QUEEN_TABLE,
+            chess.KING:   KING_TABLE,
+        }
+
+        pst_score = 0
+        op_pst_score = 0
+
+        for piece_type, table in pst_map.items():
+            for square in board.pieces(piece_type, self.color):
+                pst_score += pst_lookup(table, square, self.color)
+            for square in board.pieces(piece_type, not self.color):
+                op_pst_score += pst_lookup(table, square, not self.color)
+
+        score += pst_score * mod_list(PST_MOD)
+        score -= op_pst_score * mod_list(PST_MOD)
 
         ################### EVALUATION ###################
 

@@ -79,8 +79,11 @@ class chessGUI:
         self.black_eval_bot = None
 
         self.root = tk.Tk()
-        self.root.title("Chess")
+        self.root.title("Chess Handler")
         self.root.configure(bg="#2b2b2b")
+
+        icon_image = tk.PhotoImage(file='base/chessHandlerIcon.png')
+        self.root.iconphoto(True, icon_image)
 
         # Canvas includes coord padding
         self.canvas = tk.Canvas(
