@@ -188,6 +188,7 @@ KING_TABLE = [EMPTY, [
 ] ]
 
 PST_MOD = [0.02, 0, 0, 0]
+OP_PST_MOD = [-0.01, 0, 0, 0]
 
 def bound(x):
     return max(min(x,1),0)
@@ -470,6 +471,9 @@ class Bot(ChessBotBase.Bot):
         
         #score -= op_castle_k_score * mod_list(KINGSIDE_CASTLE_MOD)
         #score -= op_castle_q_score * mod_list(QUEENSIDE_CASTLE_MOD)
+
+        score += pst_score * mod_list(PST_MOD)
+        score += op_pst_score * mod_list(OP_PST_MOD)
 
         score += material * mod_list(MATERIAL_MOD)
         score += op_material * mod_list(OP_MATERIAL_MOD)

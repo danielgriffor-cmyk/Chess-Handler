@@ -85,6 +85,9 @@ class chessGUI:
         icon_image = tk.PhotoImage(file='base/chessHandlerIcon.png')
         self.root.iconphoto(True, icon_image)
 
+        try: self.root.state('zoomed') 
+        except tk.TclError: self.root.attributes('-zoomed', True)
+
         # Canvas includes coord padding
         self.canvas = tk.Canvas(
             self.root,
