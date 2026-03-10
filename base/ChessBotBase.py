@@ -40,12 +40,14 @@ class Bot:
         self.turn = 0
         self.transposition_table = {}
         self.past_moves_hash = {}
-        self.is_enpassant = False
-        self.is_castle = False
-        self.is_promote = False
+        self.has_castled = None
+        self.op_has_castled = None
 
     def image(self):
         return "base/ChessBotBaseIcon.png"
+    
+    def max_eval(self):
+        return 10
 
     def to_image_data(self, image_path: str) -> str:
         """
@@ -136,7 +138,8 @@ class Bot:
         self.transposition_table[h] = (value, depth)
         return value
 
-    def choose_move(self, board, depth=None, remaining_time=None):
+    def choose_move(self, board: chess.Board, depth=None, remaining_time=None):
+        last_board = board.copy()
         move = self.opening(board)
         if move is not None and move in board.legal_moves:
             self.turn += 1
@@ -200,7 +203,24 @@ class Bot:
     def move_chosen(self, move):
         pass
 
+    def update_castling_status(self, move, board):
+        if board.is_castling(move):
+            moving_color = board.color_at(move.from_square)
+            if moving_color == self.color:
+                if board.is_kingside_castling(move):
+                    self.has_castled = chess.KING
+                elif board.is_queenside_castling(move):
+                    self.has_castled = chess.QUEEN
+            else:
+                if board.is_kingside_castling(move):
+                    self.op_has_castled = chess.KING
+                elif board.is_queenside_castling(move):
+                    self.op_has_castled = chess.QUEEN
+    
+
     def reset(self):
         self.transposition_table.clear()
         self.past_moves_hash.clear()
         self.turn = 0
+        self.has_castled = None
+        self.op_has_castled = None

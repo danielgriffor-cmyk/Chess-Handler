@@ -28,7 +28,7 @@ MATERIAL_MOD = [1, 0.5, -0.2, 3]
 OP_MATERIAL_MOD = [-1.05, -0.5, 0.2, 0]
 
 DEVELOP_MOD = [0.75, 0, 0, 0]
-OP_DEVELOP_MOD = [0.7, 0, 0, 0]
+OP_DEVELOP_MOD = [0.70, 0, 0, 0]
 
 COVERAGE_MOD = [0.0025, 0, 0, 0]
 OP_COVERAGE_MOD = [-0.003, 0, 0, 0]
@@ -40,7 +40,90 @@ DEFENDED_MOD = [0.1, 0, 0, 0]
 OP_DEFENDED_MOD = [-0.1, 0, 0, 0]
 
 
-TEMPO_MOD = [1.05,0.45,0.25,0]
+TEMPO_MOD = [1.05, 0.45, 0.25, 0.45]
+
+KINGSIDE_CASTLE_MOD = [0.5, 0.5, 1, 1.5]
+QUEENSIDE_CASTLE_MOD = [0.5, 0.5, 1, 1.5]
+
+OPPOSITE_CASTLE_MOD = [0, 0.2, 0.3, 0.4]
+
+
+PAWN_TABLE = [
+     0,  0,  0,  0,  0,  0,  0,  0,  # rank 1
+     5, 10, 10,-20,-20, 10, 10,  5,  # rank 2
+     5, -5,-10,  0,  0,-10, -5,  5,  # rank 3
+     0,  0,  0, 20, 20,  0,  0,  0,  # rank 4
+     5,  5, 10, 25, 25, 10,  5,  5,  # rank 5
+    10, 10, 20, 30, 30, 20, 10, 10,  # rank 6
+    50, 50, 50, 50, 50, 50, 50, 50,  # rank 7
+     0,  0,  0,  0,  0,  0,  0,  0,  # rank 8
+]
+
+KNIGHT_TABLE = [
+    -50,-40,-30,-30,-30,-30,-40,-50,  # rank 1
+    -40,-20,  0,  5,  5,  0,-20,-40,  # rank 2
+    -30,  5, 10, 15, 15, 10,  5,-30,  # rank 3
+    -30,  0, 15, 20, 20, 15,  0,-30,  # rank 4
+    -30,  5, 15, 20, 20, 15,  5,-30,  # rank 5
+    -30,  0, 10, 15, 15, 10,  0,-30,  # rank 6
+    -40,-20,  0,  0,  0,  0,-20,-40,  # rank 7
+    -50,-40,-30,-30,-30,-30,-40,-50,  # rank 8
+]
+
+BISHOP_TABLE = [
+    -20,-10,-10,-10,-10,-10,-10,-20,  # rank 1
+    -10,  5,  0,  0,  0,  0,  5,-10,  # rank 2
+    -10, 10, 10, 10, 10, 10, 10,-10,  # rank 3
+    -10,  0, 10, 10, 10, 10,  0,-10,  # rank 4
+    -10,  5,  5, 10, 10,  5,  5,-10,  # rank 5
+    -10,  0,  5, 10, 10,  5,  0,-10,  # rank 6
+    -10,  0,  0,  0,  0,  0,  0,-10,  # rank 7
+    -20,-10,-10,-10,-10,-10,-10,-20,  # rank 8
+]
+
+ROOK_TABLE = [
+     0,  0,  0,  5,  5,  0,  0,  0,  # rank 1
+    -5,  0,  0,  0,  0,  0,  0, -5,  # rank 2
+    -5,  0,  0,  0,  0,  0,  0, -5,  # rank 3
+    -5,  0,  0,  0,  0,  0,  0, -5,  # rank 4
+    -5,  0,  0,  0,  0,  0,  0, -5,  # rank 5
+    -5,  0,  0,  0,  0,  0,  0, -5,  # rank 6
+     5, 10, 10, 10, 10, 10, 10,  5,  # rank 7
+     0,  0,  0,  0,  0,  0,  0,  0,  # rank 8
+]
+
+QUEEN_TABLE = [
+    -20,-10,-10, -5, -5,-10,-10,-20,  # rank 1
+    -10,  0,  5,  0,  0,  0,  0,-10,  # rank 2
+    -10,  5,  5,  5,  5,  5,  0,-10,  # rank 3
+      0,  0,  5,  5,  5,  5,  0, -5,  # rank 4
+     -5,  0,  5,  5,  5,  5,  0, -5,  # rank 5
+    -10,  0,  5,  5,  5,  5,  0,-10,  # rank 6
+    -10,  0,  0,  0,  0,  0,  0,-10,  # rank 7
+    -20,-10,-10, -5, -5,-10,-10,-20,  # rank 8
+]
+
+KING_MIDDLE_TABLE = [
+     20, 30, 10,  0,  0, 10, 30, 20,  # rank 1
+     20, 20,  0,  0,  0,  0, 20, 20,  # rank 2
+    -10,-20,-20,-20,-20,-20,-20,-10,  # rank 3
+    -20,-30,-30,-40,-40,-30,-30,-20,  # rank 4
+    -30,-40,-40,-50,-50,-40,-40,-30,  # rank 5
+    -30,-40,-40,-50,-50,-40,-40,-30,  # rank 6
+    -30,-40,-40,-50,-50,-40,-40,-30,  # rank 7
+    -30,-40,-40,-50,-50,-40,-40,-30,  # rank 8
+]
+
+KING_END_TABLE = [
+    -50,-30,-30,-30,-30,-30,-30,-50,  # rank 1
+    -30,-30,  0,  0,  0,  0,-30,-30,  # rank 2
+    -30,-10, 20, 30, 30, 20,-10,-30,  # rank 3
+    -30,-10, 30, 40, 40, 30,-10,-30,  # rank 4
+    -30,-10, 30, 40, 40, 30,-10,-30,  # rank 5
+    -30,-10, 20, 30, 30, 20,-10,-30,  # rank 6
+    -30,-20,-10,  0,  0,-10,-20,-30,  # rank 7
+    -50,-40,-30,-20,-20,-30,-40,-50,  # rank 8
+]
 
 def bound(x):
     return max(min(x,1),0)
@@ -181,7 +264,7 @@ class Bot(ChessBotBase.Bot):
                         self.op_rooks_dev.append(square)
                     elif piece == chess.QUEEN:
                         self.op_queens_dev.append(square)
-
+    
     def evaluate(self, board: chess.Board):
 
         score = 0
@@ -276,7 +359,21 @@ class Bot(ChessBotBase.Bot):
                     op_attacked.append(piece)
             
 
+        ################### SPECIAL ###################
+
+        castle_k_score = 1 if self.has_castled == chess.KING else 0
+        castle_q_score = 1 if self.has_castled == chess.QUEEN else 0
+
+        op_castle_k_score = 1 if self.op_has_castled == chess.KING else 0
+        op_castle_q_score = 1 if self.op_has_castled == chess.QUEEN else 0
+
         ################### EVALUATION ###################
+
+        #score += castle_k_score * mod_list(KINGSIDE_CASTLE_MOD)
+        #score += castle_q_score * mod_list(QUEENSIDE_CASTLE_MOD)
+        
+        #score -= op_castle_k_score * mod_list(KINGSIDE_CASTLE_MOD)
+        #score -= op_castle_q_score * mod_list(QUEENSIDE_CASTLE_MOD)
 
         score += material * mod_list(MATERIAL_MOD)
         score += op_material * mod_list(OP_MATERIAL_MOD)

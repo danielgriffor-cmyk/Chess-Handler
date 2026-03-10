@@ -13,10 +13,12 @@ import bots.alephNull as AlephNull
 
 PLAYER = "human"
 
-white_bot = AlephNull.Bot(color = chess.WHITE, depth=3, qsearch=True)
+white_bot = ShallowTeal.Bot(color = chess.WHITE, depth=2, qsearch=True)
 black_bot = AlephNull.Bot(color = chess.BLACK, depth=2, qsearch=True)
 
 gui = chessGUI(white_player=white_bot, black_player=black_bot)
+
+gui.piece_set = "neo"
 gui.move_time = 100
 
 
