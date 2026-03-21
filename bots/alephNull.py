@@ -21,7 +21,7 @@ ROOK_DEVELOPMENT_MOD = [0, -2, 2, 7]
 QUEEN = [11, 0, -2, 1]
 QUEEN_DEVELOPMENT_MOD = [0, -10, 2, 9]
 
-SIMPLIFICATION_MOD = [0, 0, 0, 0]
+SIMPLIFICATION_MOD = [0, -0.1, 0.1, 0.3]
 
 
 MATERIAL_MOD = [1, 0.5, -0.2, 3]
@@ -335,6 +335,8 @@ class Bot(ChessBotBase.Bot):
         score = 0
 
         ################### SETUP ###################
+
+        epsilon = 1e-3
         
         if board.is_checkmate():
             if board.turn == self.color:
@@ -380,6 +382,8 @@ class Bot(ChessBotBase.Bot):
         op_material += len(self.op_bishops) * mod_list(BISHOP)
         op_material += len(self.op_rooks) * mod_list(ROOK)
         op_material += len(self.op_queens) * mod_list(QUEEN)
+
+        simplification = (material + epsilon) / (op_material + epsilon)
         
         ################### DEVELOPMENT ###################
         
@@ -461,9 +465,6 @@ class Bot(ChessBotBase.Bot):
             for square in board.pieces(piece_type, not self.color):
                 op_pst_score += pst_lookup(table, square, not self.color)
 
-        score += pst_score * mod_list(PST_MOD)
-        score -= op_pst_score * mod_list(PST_MOD)
-
         ################### EVALUATION ###################
 
         #score += castle_k_score * mod_list(KINGSIDE_CASTLE_MOD)
@@ -477,7 +478,7 @@ class Bot(ChessBotBase.Bot):
 
         score += material * mod_list(MATERIAL_MOD)
         score += op_material * mod_list(OP_MATERIAL_MOD)
-        score -= len(self.total_pieces) * mod_list(SIMPLIFICATION_MOD)
+        score -= simplification * mod_list(SIMPLIFICATION_MOD)
 
         score += development * mod_list(DEVELOP_MOD)
         score += op_development * mod_list(OP_DEVELOP_MOD)
