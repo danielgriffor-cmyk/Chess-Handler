@@ -43,6 +43,24 @@ class Bot:
         self.has_castled = None
         self.op_has_castled = None
 
+        self.op_checks = 0
+        self.self_checks = 0
+
+    def get_checks(self, board):
+        temp_board = chess.Board()
+        checks = {chess.WHITE: 0, chess.BLACK: 0}
+
+        for move in board.move_stack:
+            temp_board.push(move)
+            if temp_board.is_check():
+                checks[not temp_board.turn and chess.BLACK or chess.WHITE] += 1
+        if self.color == chess.WHITE:
+            self.self_checks = checks[1]
+            self.op_checks = checks[0]
+        else:
+            self.op_checks = checks[1]
+            self.self_checks = checks[0]
+
     def image(self):
         return "base/ChessBotBaseIcon.png"
     
@@ -108,6 +126,7 @@ class Bot:
         return alpha
 
     def main_eval(self, board):
+        self.get_checks(board)
         score = self.evaluate(board)
         return score if board.turn == self.color else -score
 

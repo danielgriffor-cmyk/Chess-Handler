@@ -10,6 +10,7 @@ import bots.escanor as Escanor
 import bots.shallowTeal as ShallowTeal
 import bots.kamikazeGambiterBot as KamikazeGambiterBot
 import bots.alephNull as AlephNull
+import bots.ThreeCheckBot as ThreeCheck
 
 PLAYER = "human"
 
@@ -18,8 +19,11 @@ black_bot = AlephNull.Bot(color = chess.BLACK, depth=2, qsearch=True)
 
 gui = chessGUI(white_player=white_bot, black_player=black_bot)
 
-gui.piece_set = "neo"
+gui.piece_set = "classic"
 gui.move_time = 100
+
+# gui.special["variant"] = "3check"
+# gui.load_variant()
 
 
 gui.run()

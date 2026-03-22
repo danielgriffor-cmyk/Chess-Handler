@@ -4,6 +4,7 @@ from PIL import Image, ImageDraw, ImageTk
 import chess
 import chess.pgn
 import math
+from playsound import playsound
 import threading
 import base64
 from io import BytesIO
@@ -69,6 +70,9 @@ class PromotionDialog(tk.Toplevel):
 class chessGUI:
     def __init__(self, white_player='human', black_player=None):
         self.piece_set = "classic"
+        self.special = {"variant": "normal"} # normal, 3check
+        self.variant_game_over = False
+        self.load_variant()
 
         self.move_time = 100
         self.board = chess.Board()
@@ -193,6 +197,10 @@ class chessGUI:
         self.canvas.bind("<Button-1>", self.on_click)
         self.draw()
         self.root.after(self.move_time, self.bot_turn)
+    
+    def load_variant(self):
+        if self.special["variant"] == "3check":
+            self.special["data"] = [0, 0]
 
     def get_eval_bots(self, white_eval_bot, black_eval_bot):
         self.white_eval_bot = white_eval_bot
@@ -267,6 +275,43 @@ class chessGUI:
             new_h = int(img.height * size)
             img = img.resize((new_w, new_h), Image.Resampling.LANCZOS)
             self.images[symbol] = ImageTk.PhotoImage(img)
+
+    def play_sound(self, filename):
+        filename = f"audio/{filename}"
+        threading.Thread(
+            target=playsound,
+            args=(filename,),
+            daemon=True
+        ).start()
+
+    def play_move_sfx(self, move: chess.Move, board_before: chess.Board):
+        # 1. CHECKMATE
+        if self.board.is_checkmate():
+            self.play_sound("checkmate.mp3")
+            return
+
+        # 2. CHECK
+        if self.board.is_check():
+            self.play_sound("check.mp3")
+            return
+
+        # 3. CASTLING
+        if board_before.is_castling(move):
+            self.play_sound("castle.mp3")
+            return
+
+        # 4. CAPTURE
+        if board_before.is_capture(move):
+            self.play_sound("capture.mp3")
+            return
+
+        # 5. PROMOTE
+        if move.promotion is not None:
+            self.play_sound("promote.mp3")
+            return
+
+        # 6. NORMAL MOVE
+        self.play_sound("move.mp3")
 
     def make_move_images(self):
         dot_size = 25
@@ -416,11 +461,20 @@ class chessGUI:
         if self.board.is_check():
             side = "White" if self.board.turn == chess.WHITE else "Black"
             self.status.config(text=f"⚠ {side} is in check!")
+            if self.special["variant"] == "3check":
+                self.special["data"][0 if self.board.turn == chess.WHITE else 1] += 1
+                if self.special["data"][0] >= 3 or self.special["data"][1] >= 3:
+                    winner = "Black" if self.board.turn == chess.WHITE else "White"
+                    self.status.config(text=f"✓ 3Check {winner} wins.")
+                    self.variant_game_over = True
         else:
             self.status.config(text="")
         return False
 
     def on_click(self, event):
+        if self.variant_game_over:
+            return
+        
         if self.board.is_game_over():
             return
 
@@ -446,9 +500,11 @@ class chessGUI:
                     if rank == 0 or rank == 7:
                         promotion = self.ask_promotion()
                 self.prev_sq = [self.selected, sq]
+                move = chess.Move(self.selected, sq, promotion=promotion)
                 board_before = self.board.copy()
                 self._notify_bots_of_move(chess.Move(self.selected, sq, promotion=promotion), board_before)
                 self.board.push(chess.Move(self.selected, sq, promotion=promotion))
+                self.play_move_sfx(move, board_before)
                 self.selected = None
                 self.legal_targets.clear()
                 self.legal_moves.clear()
@@ -469,6 +525,9 @@ class chessGUI:
         self.draw()
 
     def bot_turn(self):
+        if self.variant_game_over:
+            return
+        
         if self.board.is_game_over():
             return
 
@@ -491,6 +550,7 @@ class chessGUI:
             board_before = self.board.copy()
             self._notify_bots_of_move(move, board_before)
             self.board.push(move)
+            self.play_move_sfx(move, board_before)
             changed_board = self.board.piece_map().copy()
             for part in range(64):
                 if curr_board.get(part) != changed_board.get(part):
